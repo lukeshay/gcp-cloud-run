@@ -28,16 +28,17 @@ resource "google_cloud_run_service" "google_cloud_run_service" {
   template {
     spec {
       containers {
-        image = "us-central1-docker.pkg.dev/rust-examples/examples/pub-sub:1fa64d4"
+        image = "us-central1-docker.pkg.dev/rust-examples/examples/pub-sub:e3e3c10"
       }
     }
 
     metadata {
       annotations = {
-        "autoscaling.knative.dev/maxScale"  = "100"
-        "run.googleapis.com/client-name"    = "terraform"
-        "run.googleapis.com/ingress"        = "all"
-        "run.googleapis.com/ingress-status" = "all"
+        "autoscaling.knative.dev/maxScale"     = "100"
+        "run.googleapis.com/client-name"       = "terraform"
+        "run.googleapis.com/ingress-status"    = "all"
+        "run.googleapis.com/ingress"           = "all"
+        "serving.knative.dev/rollout-duration" = "300s"
       }
     }
   }
