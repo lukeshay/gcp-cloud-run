@@ -1,8 +1,9 @@
-use actix_web::{middleware, post, web, App, HttpResponse, HttpServer};
+use actix_web::{get, middleware, post, web, App, HttpResponse, HttpServer};
 use serde::{Deserialize, Serialize};
 use std::env;
 
 const HOST: &str = "0.0.0.0";
+
 #[derive(Debug, Serialize, Deserialize)]
 struct PubSubMessage {
     data: String,
@@ -13,13 +14,22 @@ struct PubSubMessageData {
     name: String,
 }
 
-#[post("/")]
-async fn index(message: web::Json<PubSubMessage>) -> HttpResponse {
-    log::info!("model: {:?}", &message);
-    HttpResponse::Ok().json(message.0) // <- send response
+#[derive(Debug, Serialize, Deserialize)]
+struct HealthResponse {
+    healthy: bool,
 }
 
-#[actix_web::main] // or #[tokio::main]
+#[post("/")]
+async fn index_post() -> HttpResponse {
+    HttpResponse::Ok().json(HealthResponse { healthy: true })
+}
+
+#[get("/")]
+async fn index_get() -> HttpResponse {
+    HttpResponse::Ok().json(HealthResponse { healthy: true })
+}
+
+#[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let default_port = 8080;
 
@@ -53,7 +63,8 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(middleware::Logger::default())
             .app_data(web::JsonConfig::default().limit(4096))
-            .service(index)
+            .service(index_post)
+            .service(index_get)
     })
     .bind((HOST, port))?
     .run()
