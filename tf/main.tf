@@ -22,7 +22,7 @@ provider "google-beta" {
 }
 
 locals {
-  commit = "57a00bb"
+  commit = "fb07a78"
 }
 
 # Used to retrieve project_number later
@@ -91,6 +91,12 @@ resource "google_cloud_run_service_iam_member" "noauth" {
   member   = "allUsers"
 }
 
+resource "google_pubsub_topic" "google_pubsub_topic" {
+  name = "rust-pub-sub"
+
+  message_retention_duration = "86600s"
+}
+
 resource "google_eventarc_trigger" "google_eventarc_trigger" {
   provider = google-beta
   name     = "rust-pub-sub"
@@ -103,6 +109,11 @@ resource "google_eventarc_trigger" "google_eventarc_trigger" {
     cloud_run_service {
       service = google_cloud_run_service.google_cloud_run_service.name
       region  = google_cloud_run_service.google_cloud_run_service.location
+    }
+  }
+  transport {
+    pubsub {
+      topic = google_pubsub_topic.google_pubsub_topic.name
     }
   }
 
@@ -149,12 +160,6 @@ resource "google_eventarc_trigger" "auditlog_google_eventarc_trigger" {
 
   depends_on = [google_project_service.eventarc]
 }
-
-# resource "google_pubsub_topic" "google_pubsub_topic" {
-#   name = "rust-pub-sub"
-
-#   message_retention_duration = "86600s"
-# }
 
 # resource "google_pubsub_subscription" "google_pubsub_subscription" {
 #   name  = "rust-pub-sub"

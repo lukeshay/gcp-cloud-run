@@ -21,11 +21,15 @@ struct HealthResponse {
 
 #[post("/")]
 async fn index_post() -> HttpResponse {
+    log::info!("Received POST request");
+
     HttpResponse::Ok().json(HealthResponse { healthy: true })
 }
 
 #[get("/")]
 async fn index_get() -> HttpResponse {
+    log::info!("Received GET request");
+
     HttpResponse::Ok().json(HealthResponse { healthy: true })
 }
 
