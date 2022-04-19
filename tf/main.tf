@@ -21,15 +21,6 @@ provider "google-beta" {
   region  = "us-central1"
 }
 
-resource "google_artifact_registry_repository" "google_artifact_registry_repository" {
-  provider = google-beta
-
-  location      = "us-central1"
-  repository_id = "pub-sub"
-  description   = "Rust examples"
-  format        = "DOCKER"
-}
-
 resource "google_cloud_run_service" "google_cloud_run_service" {
   name     = "rust-pub-sub"
   location = "us-central1"
@@ -37,7 +28,7 @@ resource "google_cloud_run_service" "google_cloud_run_service" {
   template {
     spec {
       containers {
-        image = "us-docker.pkg.dev/cloudrun/container/hello"
+        image = "us-central1-docker.pkg.dev/rust-examples/examples/pub-sub:1fa64d4"
       }
     }
 
@@ -45,8 +36,8 @@ resource "google_cloud_run_service" "google_cloud_run_service" {
       annotations = {
         "autoscaling.knative.dev/maxScale"  = "100"
         "run.googleapis.com/client-name"    = "terraform"
-        "run.googleapis.com/ingress"        = "internal"
-        "run.googleapis.com/ingress-status" = "internal"
+        "run.googleapis.com/ingress"        = "all"
+        "run.googleapis.com/ingress-status" = "all"
       }
     }
   }
@@ -56,4 +47,21 @@ resource "google_cloud_run_service" "google_cloud_run_service" {
     percent         = 100
     latest_revision = true
   }
+}
+
+data "google_iam_policy" "noauth_google_iam_policy" {
+  binding {
+    role = "roles/run.invoker"
+    members = [
+      "allUsers",
+    ]
+  }
+}
+
+resource "google_cloud_run_service_iam_policy" "google_cloud_run_service_iam_policy" {
+  location = google_cloud_run_service.google_cloud_run_service.location
+  project  = google_cloud_run_service.google_cloud_run_service.project
+  service  = google_cloud_run_service.google_cloud_run_service.name
+
+  policy_data = data.google_iam_policy.noauth_google_iam_policy.policy_data
 }

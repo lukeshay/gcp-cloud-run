@@ -1,8 +1,8 @@
 DOCKER ?= $(shell which docker)
 
-REGISTRY ?= us-central1-docker.pkg.dev/rust-examples/pub-sub
+REGISTRY ?= us-central1-docker.pkg.dev/rust-examples/examples/pub-sub
 
-GIT_SHA8 ?= $(shell git rev-parse--short HEAD)
+GIT_SHA8 ?= $(shell git rev-parse --short HEAD)
 
 .PHONY: docker-build
 docker-build:
