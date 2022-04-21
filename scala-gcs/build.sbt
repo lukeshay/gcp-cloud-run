@@ -6,7 +6,11 @@ inThisBuild(
     scalaVersion := "3.1.2",
     scalacOptions ++= List(
       "-deprecation",
-      "-Ywarn-unused"
+      "-Ywarn-unused",
+    ),
+    javacOptions ++= List(
+      "-source", "17.0.2",
+      "-target", "17.0.2",
     ),
     semanticdbEnabled := true,
     semanticdbIncludeInJar := true,
@@ -18,7 +22,7 @@ inThisBuild(
 
 enablePlugins(JavaServerAppPackaging)
 
-dockerBaseImage := "openjdk:8u292"
+dockerBaseImage := "openjdk:17.0.2"
 
 lazy val root = (project in file("."))
   .settings(
