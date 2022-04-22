@@ -1,4 +1,4 @@
-PROJECT_NAME ?= "scala-gcs"
+PROJECT_NAME ?= "scala-ods"
 
 SBT ?= "sbt"
 
