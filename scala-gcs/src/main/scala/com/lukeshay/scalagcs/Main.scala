@@ -27,8 +27,10 @@ object Main extends IOApp {
           .withHttpWebSocketApp(Index.service[IO])
           .build
     } yield server
-  }.use(server =>
-    IO.delay(println(s"Server Has Started at ${server.address}")) >>
-      IO.never.as(ExitCode.Success)
+  }.use(
+    server =>
+      IO.delay(println(s"Server Has Started at ${server.address}")) >>
+        IO.never.as(ExitCode.Success)
   )
+
 }

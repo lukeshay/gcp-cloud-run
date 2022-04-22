@@ -1,8 +1,10 @@
 TERRAFORM ?= $(shell which terraform)
 
+COMMIT_SHA8 ?= $(shell git rev-parse --short HEAD)
+
 .PHONY: tf
 tf:
-	@cd tf && $(TERRAFORM) $(CMD)
+	@cd tf && TF_VAR_commit=$(COMMIT_SHA8) $(TERRAFORM) $(CMD)
 
 .PHONY: tf-validate
 tf-validate:

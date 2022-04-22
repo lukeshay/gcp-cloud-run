@@ -34,11 +34,14 @@ object Index {
         case req @ POST -> Root =>
           logger.info(s"Received request: $req")
 
-          for {
-            user <- req.as[User]
-            resp <- Ok(Hello(user.name))
-          } yield (resp)
+          req.decode[PubSubPayload] {
+            payload =>
+               logger.info(s"Received Pub/Sub message: $payload")
+
+               Ok(payload)
+          }
       }
       .orNotFound
   }
+
 }
