@@ -5,3 +5,4 @@
 metals.sbt
 project/project/
 target/
+.idea/
