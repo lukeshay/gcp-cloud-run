@@ -15,6 +15,12 @@ resource "google_service_account" "receiver_google_service_account" {
   account_id = "${local.name}-receiver"
 }
 
+resource "google_service_account" "dead_letter_google_service_account" {
+  provider = google-beta
+
+  account_id = "${local.name}-dead-letter"
+}
+
 resource "google_project_iam_binding" "receiver_google_project_iam_binding" {
   provider = google-beta
   project  = local.project_id
@@ -41,7 +47,7 @@ resource "google_cloud_run_service" "google_cloud_run_service" {
     }
 
     metadata {
-      name = "${local.name}-${var.commit}"
+      name        = "${local.name}-${var.commit}"
       annotations = {
         "autoscaling.knative.dev/maxScale"     = "100"
         "run.googleapis.com/client-name"       = "terraform"
@@ -58,7 +64,7 @@ resource "google_cloud_run_service" "google_cloud_run_service" {
   }
 }
 
-resource "google_cloud_run_service_iam_member" "noauth" {
+resource "google_cloud_run_service_iam_member" "invoker_google_cloud_run_service_iam_member" {
   provider = google-beta
 
   service  = google_cloud_run_service.google_cloud_run_service.name
@@ -75,26 +81,63 @@ resource "google_pubsub_topic" "google_pubsub_topic" {
   message_retention_duration = "86600s"
 }
 
-resource "google_eventarc_trigger" "google_eventarc_trigger" {
+resource "google_pubsub_topic" "dead_letter_google_pubsub_topic" {
   provider = google-beta
 
-  name     = local.name
-  location = google_cloud_run_service.google_cloud_run_service.location
-  matching_criteria {
-    attribute = "type"
-    value     = "google.cloud.pubsub.topic.v1.messagePublished"
+  name = "${local.name}-dead-letter"
+
+  message_retention_duration = "86600s"
+}
+
+resource "google_pubsub_topic_iam_member" "member" {
+  project = google_pubsub_topic.dead_letter_google_pubsub_topic.project
+  topic   = google_pubsub_topic.dead_letter_google_pubsub_topic.name
+  role    = "roles/editor"
+  member  = "serviceAccount:${google_service_account.dead_letter_google_service_account.email}"
+}
+
+resource "google_storage_bucket" "google_storage_bucket" {
+  name     = "${local.name}-dead-letter"
+  location = "US"
+}
+
+resource "google_storage_bucket_iam_member" "member" {
+  bucket = google_storage_bucket.google_storage_bucket.name
+  role   = "roles/storage.admin"
+  member = "serviceAccount:${google_service_account.dead_letter_google_service_account.email}"
+}
+
+resource "google_dataflow_job" "google_dataflow_job" {
+  name                    = "${local.name}-dead-letter"
+  template_gcs_path       = "gs://dataflow-templates-us-central1/latest/Cloud_PubSub_to_GCS_Text"
+  temp_gcs_location       = "gs://${google_storage_bucket.google_storage_bucket.name}/temp"
+  enable_streaming_engine = true
+  parameters              = {
+    inputTopic           = google_pubsub_topic.dead_letter_google_pubsub_topic.id
+    outputDirectory      = "gs://${google_storage_bucket.google_storage_bucket.name}/output"
+    outputFilenamePrefix = "output"
   }
-  destination {
-    cloud_run_service {
-      service = google_cloud_run_service.google_cloud_run_service.name
-      region  = google_cloud_run_service.google_cloud_run_service.location
-    }
-  }
-  transport {
-    pubsub {
-      topic = google_pubsub_topic.google_pubsub_topic.name
+  service_account_email = google_service_account.dead_letter_google_service_account.email
+  on_delete             = "cancel"
+}
+
+resource "google_pubsub_subscription" "google_pubsub_subscription" {
+  provider = google-beta
+
+  name = local.name
+
+  topic = google_pubsub_topic.google_pubsub_topic.name
+
+  push_config {
+    push_endpoint = google_cloud_run_service.google_cloud_run_service.status[0].url
+
+    oidc_token {
+      service_account_email = google_service_account.invoker_google_service_account.email
     }
   }
 
-  service_account = google_service_account.invoker_google_service_account.email
+  dead_letter_policy {
+    dead_letter_topic     = google_pubsub_topic.dead_letter_google_pubsub_topic.id
+    max_delivery_attempts = 10
+  }
 }

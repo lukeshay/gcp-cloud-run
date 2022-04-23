@@ -10,3 +10,6 @@ include $(CURDIR)/../mk/docker.mk
 PHONY: build
 build:
 	@$(SBT) docker:stage
+
+.PHONY: deploy
+deploy: build docker-build docker-push tf-apply
