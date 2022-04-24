@@ -1,5 +1,5 @@
 package com.lukeshay.scalagcs
-package domain
+package pubsub
 
 import java.util.Base64
 
@@ -9,7 +9,8 @@ case class PubSubMessage(
     publishTime: String,
     messageId: String
 ) {
-  val parsedData: String = new String(Base64.getDecoder.decode(data))
+  val bufferData: Array[Byte] = Base64.getDecoder.decode(data)
+  val parsedData: String = new String(bufferData)
 }
 
 case class PubSubPayload(message: PubSubMessage, subscription: String)
