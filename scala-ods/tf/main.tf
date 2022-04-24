@@ -44,6 +44,12 @@ resource "google_cloud_run_service_iam_member" "subscription_google_service_acco
   member   = "serviceAccount:${google_service_account.subscription_google_service_account.email}"
 }
 
+resource "google_project_iam_member" "google_project_iam_member" {
+  project = local.project_id
+  role    = "roles/iam.serviceAccountTokenCreator"
+  member  = "serviceAccount:${google_service_account.subscription_google_service_account.email}"
+}
+
 resource "google_pubsub_topic" "google_pubsub_topic" {
   name = local.name
 

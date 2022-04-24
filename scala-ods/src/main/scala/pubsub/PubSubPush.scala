@@ -45,7 +45,7 @@ object PubSubPush {
                 case req @ POST -> Root =>
                   logger.info(s"Received request: $req")
 
-                  req.decode[PubSubPayload] { payload =>
+                  req.as[PubSubPayload].flatMap { payload =>
                      logger.info(
                        s"Received Pub/Sub message: $payload"
                      )
