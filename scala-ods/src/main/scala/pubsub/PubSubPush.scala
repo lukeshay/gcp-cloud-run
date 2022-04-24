@@ -52,8 +52,12 @@ object PubSubPush {
 
                      handler(payload, logger) match {
                        case Success(result) =>
+                         logger.info("Successfully handled message")
+
                          Ok(SuccessResponse(result).asJson)
                        case Failure(error) =>
+                         logger.error("Error handling message", error)
+
                          InternalServerError(
                            ErrorResponse(
                              error.getMessage
