@@ -9,8 +9,8 @@ case class PubSubMessage(
     publishTime: String,
     messageId: String
 ) {
-  val bufferData: Array[Byte] = Base64.getDecoder.decode(data)
-  val parsedData: String = new String(bufferData)
+  def bufferData: Array[Byte] = Base64.getDecoder.decode(data)
+  def parsedData: String = new String(bufferData)
 }
 
 case class PubSubPayload(message: PubSubMessage, subscription: String)
